@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DApp with Privy Connect</title>
+  <script src="https://widget.privy.io/embed.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0d1117;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: #161b22;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+      width: 90%;
+      max-width: 400px;
+      position: relative;
+      z-index: 1;
+    }
+
+    #privy-login {
+      margin-top: 15px;
+      z-index: 2;
+    }
+
+    .wallet-address {
+      margin-top: 20px;
+      font-size: 16px;
+      word-break: break-all;
+    }
+
+    .logout-btn {
+      margin-top: 15px;
+      background-color: #ff4d4f;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .logout-btn:hover {
+      background-color: #ff7875;
+    }
+
+    .notice {
+      margin-top: 15px;
+      color: #ffa940;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Connect Wallet</h1>
+    <div id="privy-login"></div>
+    <div class="wallet-address" id="walletAddress"></div>
+    <div class="notice" id="networkNotice"></div>
+    <button class="logout-btn" onclick="logoutWallet()" style="display: none;" id="logoutBtn">Logout</button>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const PRIVY_CLIENT_ID = "client-WY6MChJeJPqufDz5V2M929B3v1wXTjLFgDoMU7nX6PWWB"; // Ganti dengan milikmu
+
+      const privy = new Privy(PRIVY_CLIENT_ID, {
+        embedded: true,
+        showWalletLoginFirst: true,
+        container: "#privy-login",
+      });
+
+      privy.on("login", async (user) => {
+        const wallet = user.wallet;
+        if (wallet) {
+          document.getElementById("walletAddress").innerText = "Wallet: " + wallet.address;
+          document.getElementById("logoutBtn").style.display = "inline-block";
+
+          // Cek jaringan Base (chainId = 0x2105)
+          if (window.ethereum) {
+            const chainId = await ethereum.request({ method: "eth_chainId" });
+            if (chainId !== "0x2105") {
+              document.getElementById("networkNotice").innerText = "⚠️ Please switch to Base Mainnet.";
+            } else {
+              document.getElementById("networkNotice").innerText = "";
+            }
+          }
+        }
+      });
+
+      privy.mount(); // pastikan dipanggil setelah DOM siap
+
+      window.privy = privy; // optional, buat akses di global scope
+    });
+
+    function logoutWallet() {
+      window.privy.logout();
+      document.getElementById("walletAddress").innerText = "";
+      document.getElementById("logoutBtn").style.display = "none";
+      document.getElementById("networkNotice").innerText = "";
+    }
+  </script>
+</body>
+</html>
